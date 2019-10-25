@@ -40,7 +40,7 @@ class FruitHeap
     bool isEmpty();
 
     private:
-    vector<int> heap;
+    vector<int> heap_;
     int getParent(int);
     int getLeftChild(int);
     int getRightChild(int);
@@ -50,27 +50,27 @@ class FruitHeap
 
 FruitHeap::FruitHeap()
 {
-	heap.resize(0);
+	heap_.resize(0);
 }
 
 FruitHeap::~FruitHeap()
 {
-	heap.clear();
+	heap_.clear();
 }
 
 size_t FruitHeap::size()
 {
-    return heap.size();
+    return heap_.size();
 }
 
 bool FruitHeap::isEmpty()
 {
-    return heap.empty();
+    return heap_.empty();
 }
 
 void FruitHeap::push(int key)
 {
-    heap.push_back(key);
+    heap_.push_back(key);
     heapifyUp(size() - 1);
 }
 
@@ -85,14 +85,14 @@ int FruitHeap::pop()
 
     if (size() > 1)
     {
-        heap[0] = heap.back();
-        heap.pop_back();
+        heap_[0] = heap_.back();
+        heap_.pop_back();
         heapifyDown(0);
         return result;
     }
     if (size() == 1)
     {
-        heap.pop_back();
+        heap_.pop_back();
         return result;
     }
 }
@@ -102,7 +102,7 @@ int FruitHeap::getMaxMass()
     if (isEmpty())
         throw out_of_range("Heap is empty");
     
-    return heap.at(0);
+    return heap_.at(0);
 }
 
 int FruitHeap::getParent(int idx)
@@ -130,23 +130,23 @@ void FruitHeap::heapifyDown(int idx)
 
 	int largest = idx;
 
-	if (left < size() and heap[left] > heap[idx])
+	if (left < size() and heap_[left] > heap_[idx])
 		largest = left;
 
-	if (right < size() and heap[right] > heap[largest])
+	if (right < size() and heap_[right] > heap_[largest])
 		largest = right;
 
 	if (largest != idx) {
-		swap(heap[idx], heap[largest]);
+		swap(heap_[idx], heap_[largest]);
 		heapifyDown(largest);
 	}
 }
 
 void FruitHeap::heapifyUp(int idx)
 {
-	if (idx > 0 and heap[getParent(idx)] < heap[idx]) 
+	if (idx > 0 and heap_[getParent(idx)] < heap_[idx]) 
 	{
-		swap(heap[idx], heap[getParent(idx)]);
+		swap(heap_[idx], heap_[getParent(idx)]);
 		heapifyUp(getParent(idx));
 	}
 }
