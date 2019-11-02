@@ -31,7 +31,6 @@ class FruitHeap
 {
     public:
     FruitHeap();
-    ~FruitHeap();
 
     size_t size();
     void push(int);
@@ -177,7 +176,7 @@ int main()
             //если масса "огрызка" ненулевая, добавим "огрызок" в промежуточную
             // корзину
             if (basket.getMaxMass() / 2 > 0)
-                basketToReturn.push_back(bitenFruitMass(basket.getMaxMass()));
+                basketToReturn.push_back(basket.getMaxMass() / 2);
             massTaken += basket.pop();
         }
 
