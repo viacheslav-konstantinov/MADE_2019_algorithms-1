@@ -34,6 +34,10 @@ using namespace std;
 class Queue {
 public:
     Queue();
+    Queue(const Queue&) = delete;
+    Queue(const Queue&&) = delete;
+    Queue& operator= (const Queue&) = delete;
+    Queue& operator= (const Queue&&) = delete;
     ~Queue();
  
     void Push(int key);
@@ -86,20 +90,18 @@ void Queue::Push(int key)
 
 void Queue::AllocMemory(int key)
 {
-    size_ += SIZE_STEP;
-    // указатель на расширенную очередь
-    int * newBuffer = new int[size_];
+    int * newBuffer = new int[2*size_];
 
     // Если idxPush_ = 0 и буфер заполнен, значит "хвост"
     // очереди в самом конце и при перезаписи данных 
     // индексы уже записанных чисел не изменятся
     if (idxPush_ == 0) 
     {
-        idxPush_ += SIZE_STEP;
-        for(int i = 0; i < size_ - SIZE_STEP; i++)
+        idxPush_ += size_;
+        for(int i = 0; i < size_; ++i)
             *(newBuffer + i) = *(buffer_ + i);
         
-        *(newBuffer + SIZE_STEP) = key;
+        *(newBuffer + size_) = key;
     }
     else
     {
@@ -114,17 +116,18 @@ void Queue::AllocMemory(int key)
         // idxPush_<=idxPop_ значит, что массив имеет струкутру "голова""хвост"
         // и в новой очереди элементы хвоста и idxPop_ будут иметь индексы больше
         // на SIZE_STEP 
-        if (idxPush_<=idxPop_)
+        if (idxPush_ <= idxPop_)
         {
-            for(int i = idxPop_; i < size_ - SIZE_STEP; i++)
-                *(newBuffer + SIZE_STEP + i) = *(buffer_ + i);
-            idxPop_ += SIZE_STEP;
+            for(int i = idxPop_; i < size_; i++)
+                *(newBuffer + size_ + i) = *(buffer_ + i);
+            idxPop_ += size_;
         }
     }
     delete [] buffer_;
     buffer_ = newBuffer;
     idxPush_ += 1;
     currentSize_ += 1;
+    size_ *= 2;
 }
 
 int Queue::Pop()
@@ -211,19 +214,26 @@ int main()
     for(int i = 0; i < numberOfStrings; i++)
     {
         cin >> operation;
-        cin >> numberToOperate;
-
         if(operation == 2)
         {
+            cin >> numberToOperate;
+            //cout << "Popping is called\n";
             if(myQueue.Pop()!=numberToOperate)
             {
                 cout << "NO";
                 return 0;
             }
         }
-        else if(operation == 3)
+        if(operation == 3)
         {
+            cin >> numberToOperate;
+            //cout << "Pushing is called\n";
             myQueue.Push(numberToOperate);
+        }    
+        if(operation == 1)
+        {
+            //cout << "Printing is called\n";
+            myQueue.PrintQueue();
         }
     }
     
