@@ -53,11 +53,6 @@ FruitHeap::FruitHeap()
 	heap_.resize(0);
 }
 
-FruitHeap::~FruitHeap()
-{
-	heap_.clear();
-}
-
 size_t FruitHeap::size()
 {
     return heap_.size();
@@ -151,15 +146,6 @@ void FruitHeap::heapifyUp(int idx)
 	}
 }
 
-int bitenFruitMass(int mass)
-{
-    if (mass == 1)
-        return 0;
-    int offset = mass % 2;
-    return (mass - offset) / 2;
-}
-
-
 int main()
 {
     size_t sizeHeap;
@@ -190,7 +176,7 @@ int main()
         {
             //если масса "огрызка" ненулевая, добавим "огрызок" в промежуточную
             // корзину
-            if (bitenFruitMass(basket.getMaxMass()) > 0)
+            if (basket.getMaxMass() / 2 > 0)
                 basketToReturn.push_back(bitenFruitMass(basket.getMaxMass()));
             massTaken += basket.pop();
         }
