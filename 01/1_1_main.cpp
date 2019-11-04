@@ -17,28 +17,71 @@ a = 3 - push back
 Требуется напечатать YES - если все ожидаемые значения совпали. 
 Иначе, если хотя бы одно ожидание не оправдалось, то напечатать NO.
 */
+
 #define SIZE_STEP 1024
 #include <iostream>
 #include <bits/stdc++.h>
+
 using namespace std;
+
 class Queue {
 public:
     Queue();
-    Queue(const Queue&) = delete;
-    Queue(const Queue&&) = delete;
-    Queue& operator= (const Queue&) = delete;
-    Queue& operator= (const Queue&&) = delete;
     ~Queue();
-
+ 
     void Push(int key);
-@@ -86,20 +90,18 @@ void Queue::Push(int key)
+    int Pop();
+ 
+    bool IsEmpty();
+    bool IsFull();
+    void PrintQueue();
+ 
+private:
+    void AllocMemory(int);
+    int * buffer_;
+    int idxPop_;
+    int idxPush_;
+    int size_;
+    int currentSize_;
+};
+
+Queue::Queue()
+{
+    buffer_ = new int[SIZE_STEP];
+    idxPop_ = 0;
+    idxPush_ = 0;
+    size_ = SIZE_STEP;
+    currentSize_ = 0;
+}
+ 
+Queue::~Queue()
+{
+   delete [] buffer_;
+}
+ 
+void Queue::Push(int key)
+{
+    // если в буфере есть свободное место, то добавляем
+    // число, сдвигаем индекс idxPush_ и увеличиваем размер на 1 
+    if(!IsFull())
+    {
+        *(buffer_ + idxPush_) = key;
+        idxPush_ += 1;
+        if (idxPush_ > size_ - 1)
+           idxPush_ = 0; 
+        currentSize_ += 1;
+    }
+    // Аллоцируем место, если буфер заполнен
+    else
+        AllocMemory(key);
+    
+}
 
 void Queue::AllocMemory(int key)
 {
     size_ += SIZE_STEP;
     // указатель на расширенную очередь
     int * newBuffer = new int[size_];
-    int * newBuffer = new int[2*size_];
 
     // Если idxPush_ = 0 и буфер заполнен, значит "хвост"
     // очереди в самом конце и при перезаписи данных 
@@ -47,12 +90,9 @@ void Queue::AllocMemory(int key)
     {
         idxPush_ += SIZE_STEP;
         for(int i = 0; i < size_ - SIZE_STEP; i++)
-        idxPush_ += size_;
-        for(int i = 0; i < size_; ++i)
             *(newBuffer + i) = *(buffer_ + i);
-
+        
         *(newBuffer + SIZE_STEP) = key;
-        *(newBuffer + size_) = key;
     }
     else
     {
@@ -68,21 +108,16 @@ void Queue::AllocMemory(int key)
         // и в новой очереди элементы хвоста и idxPop_ будут иметь индексы больше
         // на SIZE_STEP 
         if (idxPush_<=idxPop_)
-        if (idxPush_ <= idxPop_)
         {
             for(int i = idxPop_; i < size_ - SIZE_STEP; i++)
                 *(newBuffer + SIZE_STEP + i) = *(buffer_ + i);
             idxPop_ += SIZE_STEP;
-            for(int i = idxPop_; i < size_; i++)
-                *(newBuffer + size_ + i) = *(buffer_ + i);
-            idxPop_ += size_;
         }
     }
     delete [] buffer_;
     buffer_ = newBuffer;
     idxPush_ += 1;
     currentSize_ += 1;
-    size_ *= 2;
 }
 
 int Queue::Pop()
@@ -99,14 +134,17 @@ int Queue::Pop()
     else
         return -1;
 }
+
 bool Queue::IsFull()
 {
     return currentSize_ == size_;
 }
+
 bool Queue::IsEmpty()
 {
     return currentSize_ == 0;
 }
+
 // метод для печати очереди
 // используется для отладки
 void Queue::PrintQueue()
@@ -141,6 +179,7 @@ void Queue::PrintQueue()
         {
             for (int i = 0; i < size_; i++)
                 std::cout << *(buffer_ + i) << " ";
+
             cout << endl;
         } 
         else
@@ -152,13 +191,16 @@ void Queue::PrintQueue()
         }
     }
 }
+
 int main()
 {
     int numberOfStrings;
     cin >> numberOfStrings;
     Queue myQueue;
+
     int operation;
     int numberToOperate;
+
     for(int i = 0; i < numberOfStrings; i++)
     {
         cin >> operation;
@@ -166,8 +208,6 @@ int main()
 
         if(operation == 2)
         {
-            cin >> numberToOperate;
-            //cout << "Popping is called\n";
             if(myQueue.Pop()!=numberToOperate)
             {
                 cout << "NO";
@@ -175,19 +215,11 @@ int main()
             }
         }
         else if(operation == 3)
-        if(operation == 3)
         {
-            cin >> numberToOperate;
-            //cout << "Pushing is called\n";
             myQueue.Push(numberToOperate);
-        }    
-        if(operation == 1)
-        {
-            //cout << "Printing is called\n";
-            myQueue.PrintQueue();
         }
     }
-
+    
     cout << "YES";
     
     return 0;
