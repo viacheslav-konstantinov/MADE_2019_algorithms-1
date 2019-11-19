@@ -18,11 +18,12 @@
 #include <algorithm>
 #include <stack>
 
-using namespace std;
+using KeyCallBack = void (*)(int);
+
 class BinaryTree
 {   
     public:
-        BinaryTree(const int keyOfRoot)
+        explicit BinaryTree(const int keyOfRoot)
             : size_(1), root_(new Node(keyOfRoot)) {}
         
         ~BinaryTree();
@@ -33,6 +34,7 @@ class BinaryTree
 
         void Add(const int key);
         void PrintTreePostOrder();
+        void PostOrder(KeyCallBack visit);
 
     private:
         struct Node
@@ -42,7 +44,7 @@ class BinaryTree
             Node* right = nullptr;
             Node(Node* node)
                 : key(node->key), left(node->left), right(node->right) {};
-            Node(const int key)
+            explicit Node(const int key)
                 : key(key),  left(nullptr), right(nullptr) {};
 
             bool operator==(const Node& other) const
@@ -54,35 +56,42 @@ class BinaryTree
         int size_;
         Node* root_;
 
-        using keyCallback = void (*)(int);
-        using nodeCallback = void (*)(Node*);
-        // DoPostOrder_ используется в методе печати и деструкторе
-        void DoPostOrder_(keyCallback, nodeCallback);
+        using NodeCallBack = void (*)(Node*);
+        // DoPostOrder_ используется в методе печати, деструкторе
+        // и при добавлении пользовательского образотчика
+        void DoPostOrder_(NodeCallBack visitNode, KeyCallBack visitKey);
 };
 
 BinaryTree::~BinaryTree()
 {
     //обойдем дерево и удалим каждый из узлов
-    DoPostOrder_([](int x)->void{return; }, [](Node* node)->void{delete node; });
+    DoPostOrder_([](Node* node)->void{delete node; }, [](int key)->void{return; });
 }
 void BinaryTree::PrintTreePostOrder()
 {
     //обойдем дерево и напечататем каждый из узлов
     //можно было бы обойтись и без этого метода,
     //если в деструкторе перед удалением узла печатать значение ключа
-    DoPostOrder_([](int x)->void{cout << x << " " ;}, [](Node* node)->void{return; });
+    DoPostOrder_([](Node* node)->void{return; }, [](int key)->void{std::cout << key << " "; });
 }
 
-//метод обхода
-void BinaryTree::DoPostOrder_(keyCallback doWithKey, nodeCallback doWithNodes)
+//метод для добавления пользовательского обработчика 
+// KeyCallBack = void (*)(int);
+void BinaryTree::PostOrder(KeyCallBack visit)
 {
-    stack<Node*> nodeStack;
+
+    DoPostOrder_([](BinaryTree::Node* node)->void{return; }, visit);
+}
+//метод обхода
+void BinaryTree::DoPostOrder_(NodeCallBack doWithNodes, KeyCallBack doWithKey)
+{
+    std::stack<Node*> nodeStack;
     Node* currentNode;
     currentNode = root_;
     Node* lastVisitedNode = nullptr;
     Node* topOfStack = nullptr;
  
-    while ((nodeStack.size() > 0) or currentNode) 
+    while ((nodeStack.size() > 0) or currentNode)
     {
         if (currentNode) 
         {
@@ -97,8 +106,8 @@ void BinaryTree::DoPostOrder_(keyCallback doWithKey, nodeCallback doWithNodes)
             else 
             {
                 nodeStack.pop();
-                doWithKey(topOfStack->key);
                 lastVisitedNode = topOfStack;
+                doWithKey(topOfStack->key);
                 doWithNodes(topOfStack);
             }
         }
@@ -142,14 +151,14 @@ int main()
    size_t treeSize;
    int keyBuffer;
    
-   cin >> treeSize;
+   std::cin >> treeSize;
 
-   cin >> keyBuffer;
+   std::cin >> keyBuffer;
    BinaryTree myTree(keyBuffer);
    
    for (size_t i = 1; i < treeSize; ++i)
    {
-       cin >> keyBuffer;
+       std::cin >> keyBuffer;
        myTree.Add(keyBuffer);
    }
    
