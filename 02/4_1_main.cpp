@@ -1,5 +1,5 @@
 /*
-4. Порядковая статистика
+4_1 Порядковая статистика
 
 Ограничение времени	1 секунда
 Ограничение памяти	16Mb
@@ -8,7 +8,8 @@
 Вывод	стандартный вывод или output.txt
 
 Даны неотрицательные целые числа n, k и массив целых чисел из диапазона [0..109] размера n.
-Требуется найти k-ю порядковую статистику. т.е. напечатать число, которое бы стояло на позиции с индексом k ∈[0..n-1] в отсортированном массиве.
+Требуется найти k-ю порядковую статистику. т.е. напечатать число, которое бы стояло на позиции с 
+индексом k ∈[0..n-1] в отсортированном массиве.
 
 Напишите нерекурсивный алгоритм.
 
@@ -20,11 +21,17 @@
 Описание для случая прохода от начала массива к концу:
 Выбирается опорный элемент.
 Опорный элемент меняется с последним элементом массива.
-Во время работы Partition в начале массива содержатся элементы, не бОльшие опорного. Затем располагаются элементы, строго бОльшие опорного. В конце массива лежат нерассмотренные элементы. Последним элементом лежит опорный.
+Во время работы Partition в начале массива содержатся элементы, не бОльшие опорного. 
+Затем располагаются элементы, строго бОльшие опорного. В конце массива лежат нерассмотренные элементы. 
+Последним элементом лежит опорный.
 Итератор (индекс) i указывает на начало группы элементов, строго бОльших опорного.
 Итератор j больше i, итератор j указывает на первый нерассмотренный элемент.
-Шаг алгоритма. Рассматривается элемент, на который указывает j. Если он больше опорного, то сдвигаем j. Если он не больше опорного, то меняем a[i] и a[j] местами, сдвигаем i и сдвигаем j.
+Шаг алгоритма. Рассматривается элемент, на который указывает j. Если он больше опорного, то сдвигаем j.
+Если он не больше опорного, то меняем a[i] и a[j] местами, сдвигаем i и сдвигаем j.
 В конце работы алгоритма меняем опорный и элемент, на который указывает итератор i.
+
+Ссылка на Яндекс.Контест
+https://contest.yandex.ru/contest/14768/run-report/23723542/
 */
 
 #include <iostream>
@@ -33,61 +40,91 @@
 #include <cstdlib>
 #include <algorithm>
 
-using namespace std;
 
-size_t getPivot(int * inputArray, size_t len)
+template <typename T>
+using Comparator = bool (*)(const T&, const T&);
+
+template <typename T>
+bool TLess(const T& t1, const T& t2)
 {
-    int randomIndices[3] {0, 0, 0};
-    
-    if (len <= 1)
-        return 0;
-    else
-    {
-        int divider = RAND_MAX/(len - 1);
-        for (int i = 0; i < 3; ++i)
-            randomIndices[i] = rand() / divider;
-    
-        array<int, 3> elements{inputArray[randomIndices[0]], inputArray[randomIndices[1]], inputArray[randomIndices[2]]};
-        array<int, 3> elementsSorted(elements);
-
-        sort(elementsSorted.begin(), elementsSorted.end());
-        size_t idx = distance(elements.begin(), find(elements.begin(), elements.end(), elementsSorted[1]));
-    
-        return (size_t)randomIndices[idx];
-    }
+    return (t1 < t2);
 }
 
-size_t doPartition(int * inputArray, size_t len)
-{
-    size_t pivotIdx = getPivot(inputArray, len);
-    int pivot(inputArray[pivotIdx]);
 
-    swap(inputArray[pivotIdx], inputArray[len-1]);
+template <typename T>
+T med(T a, T b, T c, Comparator<T> Tless)
+{
+    if (TLess(b, a)) 
+    {
+        if (TLess(a, c))
+            return a;
+        return (TLess(c, b)) ? b : c;
+    }   
+
+    if (TLess(b, c))  
+        return b;
+    return (TLess(c, a)) ? a : c;
+}
+
+
+template <typename T>
+size_t getPivot(T* inputArray, size_t len, Comparator<T> Tless)
+{
+    if (len > 1)
+    {
+        T a(inputArray[0]);
+        T b(inputArray[(len - 1) / 2]);
+        T c(inputArray[ len - 1]);
+
+        T median(med(a, b, c, Tless));
+    
+        if( median == a)
+            return (size_t) 0;
+        else if(median == b)
+            return (size_t) (len - 1) / 2;
+        else
+            return (size_t) len - 1;
+    }
+    else
+        return (size_t) 0;
+}
+
+template <typename T>
+size_t doPartition(T * inputArray, size_t len, Comparator<T> Tless)
+{
+    if (len <= 1)
+        return 0;
+
+    size_t pivotIdx = getPivot(inputArray, len, Tless);
+    T pivot(inputArray[pivotIdx]);
+
+    std::swap(inputArray[pivotIdx], inputArray[len-1]);
     size_t i(0), j(0);
     
     while(j < len-1)
     {
-        if (inputArray[j] > pivot)
+        if (TLess(pivot, inputArray[j]))
             ++j;    
         else
         {
-            swap(inputArray[i], inputArray[j]);
+            std::swap(inputArray[i], inputArray[j]);
             ++i;
             ++j;
         }
     }
-    swap(inputArray[i], inputArray[len-1]);
+    std::swap(inputArray[i], inputArray[len-1]);
     return i;
 }
 
-int calculateKStatistics(int * inputArray, size_t len, size_t k)
+template <typename T>
+T calculateKStatistics(T * inputArray, size_t len, size_t k, Comparator<T> Tless)
 {
     size_t p;
     while(true)
     {
-        p = doPartition(inputArray, len);
+        p = doPartition(inputArray, len, Tless);
         if (p == k)
-            return (int) inputArray[p];
+            return inputArray[p];
         if (p > k)
             len = p ;
         else
@@ -102,14 +139,14 @@ int calculateKStatistics(int * inputArray, size_t len, size_t k)
 int main()
 {
     size_t arraySize(0), k(0);
-    cin >> arraySize >> k;
+    std::cin >> arraySize >> k;
 
     int * myArray = new int[arraySize]();
     
     for(int i = 0; i < arraySize; ++i)
-        cin >> myArray[i];
+        std::cin >> myArray[i];
 
-    cout << calculateKStatistics(myArray, arraySize, k);
+    std::cout << calculateKStatistics(myArray, arraySize, k, TLess);
     
     delete [] myArray;
     return 0;
