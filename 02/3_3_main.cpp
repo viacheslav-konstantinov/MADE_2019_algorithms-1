@@ -13,6 +13,8 @@
 Требуется напечатать количество таких пар индексов (i,j) из [0..n-1], что (i < j и a[i] > a[j]). 
 Указание: количество инверсий может быть больше 4*1000000000 - используйте int64_t.
 
+Отчёт в Яндекс.Контесте
+https://contest.yandex.ru/contest/14768/run-report/23683623/
 */
 
 
@@ -20,20 +22,25 @@
 #include <stdio.h>
 #include <bits/stdc++.h>
 
-using namespace std;
+template <typename T>
+using Comparator = bool (*)(const T&, const T&);
+
 
 //склеивает массивы и считает инверсии
-void mergeAndCount(int* inputArray1, int lenFirst, int* inputArray2,  int lenSecond, int* result, int64_t& counter)
+template <typename T>
+int64_t mergeAndCount(T* inputArray1, size_t lenFirst,  T* inputArray2, 
+            size_t lenSecond, T* result, int64_t currentCounter, Comparator<T> Tless)
 {
-    int ii(0), jj(0);
-    for(int i = 0; i < lenFirst + lenSecond; ++i)
+    int64_t newCounter(currentCounter);
+    size_t ii(0), jj(0);
+    for(size_t i = 0; i < lenFirst + lenSecond; ++i)
     {
         if(ii < lenFirst and jj < lenSecond)
         {
-            if(inputArray1[ii] > inputArray2[jj])
+            if(Tless(inputArray2[jj], inputArray1[ii]))
             {
                 result[i] = inputArray2[jj];
-                counter = counter + lenFirst - ii;
+                newCounter = newCounter + lenFirst - ii;
                 jj += 1;
             }
             else
@@ -54,41 +61,53 @@ void mergeAndCount(int* inputArray1, int lenFirst, int* inputArray2,  int lenSec
             ii += 1;
         }
     }
+    return newCounter;
 }
 
 //сортирует и считает инверсии с помощью sortAndCount
-void sortAndCount(int32_t*inputArray, int len, int64_t& counter)
+template <typename T>
+int64_t sortAndCount(T* inputArray, size_t len, int64_t currentCounter, Comparator<T> Tless)
 {
     if(len <= 1)
     {
-        return;
+
+        return currentCounter;
     }
     else
     {
-        int lenFirst  = len / 2;
-        int lenSecond = len - lenFirst;
+        int64_t newCounter(currentCounter);
+        size_t lenFirst  = len / 2;
+        size_t lenSecond = len - lenFirst;
         
-        int* bufferArray = new int[len];
+        T* bufferArray = new T[len];
 
-        sortAndCount(inputArray, lenFirst, counter);
-        sortAndCount(inputArray+lenFirst, lenSecond, counter);
+        newCounter = sortAndCount(inputArray, lenFirst, newCounter, Tless);
+        newCounter = sortAndCount(inputArray+lenFirst, lenSecond, newCounter, Tless);
 
-        mergeAndCount(inputArray, lenFirst, inputArray+lenFirst, lenSecond, bufferArray, counter);
-        copy(bufferArray, bufferArray + len, inputArray);
+        newCounter = mergeAndCount(inputArray, lenFirst, inputArray+lenFirst, 
+                                            lenSecond, bufferArray, newCounter, Tless);
+        std::copy(bufferArray, bufferArray + len, inputArray);
 
         delete [] bufferArray;
+        return newCounter;
     }
+}
+
+template <typename T>
+bool compareFunc(const T& T1, const T& T2)
+{
+    return (T1 < T2);
 }
 
 int main()
 {
-    int sizeOfArray;
+    size_t sizeOfArray;
     
-    vector<int> arrayToSortVector;
+    std::vector<int> arrayToSortVector;
     
     int bufer;
     
-    while(cin >> bufer)
+    while(std::cin >> bufer)
         arrayToSortVector.push_back(bufer);    
 
     sizeOfArray = arrayToSortVector.size();
@@ -97,7 +116,7 @@ int main()
     arrayToSort = &arrayToSortVector[0];
 
     int64_t counter(0);
-    sortAndCount(arrayToSort, sizeOfArray, counter);
+    counter = sortAndCount(arrayToSort, sizeOfArray, 0, compareFunc);
 
-    cout << counter;
+    std::cout << counter;
 }
