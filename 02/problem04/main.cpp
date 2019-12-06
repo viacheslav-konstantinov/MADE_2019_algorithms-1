@@ -40,10 +40,6 @@ https://contest.yandex.ru/contest/14768/run-report/23723542/
 #include <cstdlib>
 #include <algorithm>
 
-
-template <typename T>
-using Comparator = bool (*)(const T&, const T&);
-
 template <typename T>
 bool TLess(const T& t1, const T& t2)
 {
@@ -52,7 +48,7 @@ bool TLess(const T& t1, const T& t2)
 
 
 template <typename T>
-T med(T a, T b, T c, Comparator<T> Tless)
+T med(T a, T b, T c)
 {
     if (TLess(b, a)) 
     {
@@ -68,7 +64,7 @@ T med(T a, T b, T c, Comparator<T> Tless)
 
 
 template <typename T>
-size_t getPivot(T* inputArray, size_t len, Comparator<T> Tless)
+size_t getPivot(T* inputArray, size_t len)
 {
     if (len > 1)
     {
@@ -76,7 +72,7 @@ size_t getPivot(T* inputArray, size_t len, Comparator<T> Tless)
         T b(inputArray[(len - 1) / 2]);
         T c(inputArray[ len - 1]);
 
-        T median(med(a, b, c, Tless));
+        T median( med(a, b, c));
     
         if( median == a)
             return (size_t) 0;
@@ -90,12 +86,12 @@ size_t getPivot(T* inputArray, size_t len, Comparator<T> Tless)
 }
 
 template <typename T>
-size_t doPartition(T * inputArray, size_t len, Comparator<T> Tless)
+size_t doPartition(T * inputArray, size_t len)
 {
     if (len <= 1)
         return 0;
 
-    size_t pivotIdx = getPivot(inputArray, len, Tless);
+    size_t pivotIdx = getPivot(inputArray, len);
     T pivot(inputArray[pivotIdx]);
 
     std::swap(inputArray[pivotIdx], inputArray[len-1]);
@@ -117,12 +113,12 @@ size_t doPartition(T * inputArray, size_t len, Comparator<T> Tless)
 }
 
 template <typename T>
-T calculateKStatistics(T * inputArray, size_t len, size_t k, Comparator<T> Tless)
+T calculateKStatistics(T * inputArray, size_t len, size_t k)
 {
     size_t p;
     while(true)
     {
-        p = doPartition(inputArray, len, Tless);
+        p = doPartition(inputArray, len);
         if (p == k)
             return inputArray[p];
         if (p > k)
@@ -146,7 +142,7 @@ int main()
     for(int i = 0; i < arraySize; ++i)
         std::cin >> myArray[i];
 
-    std::cout << calculateKStatistics(myArray, arraySize, k, TLess);
+    std::cout << calculateKStatistics(myArray, arraySize, k);
     
     delete [] myArray;
     return 0;
