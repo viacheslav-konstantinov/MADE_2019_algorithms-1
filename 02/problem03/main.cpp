@@ -23,13 +23,15 @@ https://contest.yandex.ru/contest/14768/run-report/23683623/
 #include <bits/stdc++.h>
 
 template <typename T>
-using Comparator = bool (*)(const T&, const T&);
+bool Tless(const T& T1, const T& T2)
+{
+    return (T1 < T2);
+}
 
 
 //склеивает массивы и считает инверсии
 template <typename T>
-int64_t mergeAndCount(T* inputArray1, size_t lenFirst,  T* inputArray2, 
-            size_t lenSecond, T* result, int64_t currentCounter, Comparator<T> Tless)
+int64_t mergeAndCount(T* inputArray1, size_t lenFirst, T* inputArray2, size_t lenSecond, T* result, int64_t currentCounter)
 {
     int64_t newCounter(currentCounter);
     size_t ii(0), jj(0);
@@ -66,7 +68,7 @@ int64_t mergeAndCount(T* inputArray1, size_t lenFirst,  T* inputArray2,
 
 //сортирует и считает инверсии с помощью sortAndCount
 template <typename T>
-int64_t sortAndCount(T* inputArray, size_t len, int64_t currentCounter, Comparator<T> Tless)
+int64_t sortAndCount(T* inputArray, size_t len, int64_t currentCounter)
 {
     if(len <= 1)
     {
@@ -81,22 +83,15 @@ int64_t sortAndCount(T* inputArray, size_t len, int64_t currentCounter, Comparat
         
         T* bufferArray = new T[len];
 
-        newCounter = sortAndCount(inputArray, lenFirst, newCounter, Tless);
-        newCounter = sortAndCount(inputArray+lenFirst, lenSecond, newCounter, Tless);
+        newCounter = sortAndCount(inputArray, lenFirst, newCounter);
+        newCounter = sortAndCount(inputArray+lenFirst, lenSecond, newCounter);
 
-        newCounter = mergeAndCount(inputArray, lenFirst, inputArray+lenFirst, 
-                                            lenSecond, bufferArray, newCounter, Tless);
+        newCounter = mergeAndCount(inputArray, lenFirst, inputArray+lenFirst, lenSecond, bufferArray, newCounter);
         std::copy(bufferArray, bufferArray + len, inputArray);
 
         delete [] bufferArray;
         return newCounter;
     }
-}
-
-template <typename T>
-bool compareFunc(const T& T1, const T& T2)
-{
-    return (T1 < T2);
 }
 
 int main()
@@ -116,7 +111,7 @@ int main()
     arrayToSort = &arrayToSortVector[0];
 
     int64_t counter(0);
-    counter = sortAndCount(arrayToSort, sizeOfArray, 0, compareFunc);
+    counter = sortAndCount(arrayToSort, sizeOfArray, 0);
 
     std::cout << counter;
 }
