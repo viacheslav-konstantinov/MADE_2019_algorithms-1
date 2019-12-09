@@ -112,6 +112,8 @@ position& position::operator=(const position& other)
     
     zero_place = other.zero_place;
     fScore = other.fScore;     
+    
+    retrun *this;
 }
 
 
