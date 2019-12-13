@@ -36,11 +36,11 @@ class Graph
         {
             try
             {
-                return vertexes_.at(idx);
+                return vertexes_.at(idx - 1);
             }
             catch (const std::out_of_range& e)
             {
-                std::cerr << e.what();
+                std::cerr << "Requested index is out of range! Index must be in the range = 1.." << numberOfVertexes_ << std::endl;
             }
         }
         size_t getNumberOfVertexes() const
