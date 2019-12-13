@@ -20,69 +20,86 @@ https://contest.yandex.ru/contest/16109/run-report/28727955/
 #include <vector>
 #include <bits/stdc++.h>
 #include <limits>
+#include <stdexcept>
 
 
-template <class TVertex, class TWeight>
+template </*class TData,*/ class TWeight>
 class Graph
 {
-    typedef std::pair<TVertex, TWeight> TEdge;
+    typedef std::pair<size_t, TWeight> TEdge;
+    //typedef std::pair<size_t, TData> TVertex;
     public:
-        Graph(const TVertex numberOfVertexes);
-        void addEdge(const TVertex, const TVertex, const TWeight);
-        void print();
-        std::vector <TEdge> getEdgesOfVertex(const TVertex idx) const
+        explicit Graph(const size_t numberOfVertexes);
+        bool addEdge(const size_t vStart, const size_t vEnd, const TWeight edgeWeight);
+        void print() const;
+        std::vector <TEdge> getEdgesOfVertex(const size_t idx) const
         {
-            return vertexes_[static_cast<size_t>(idx)];
+            try
+            {
+                return vertexes_.at(idx);
+            }
+            catch (const std::out_of_range& e)
+            {
+                std::cerr << e.what();
+            }
         }
-        TVertex getNumberOfVertexes() const
+        size_t getNumberOfVertexes() const
         {
             return numberOfVertexes_;
         }
     
     private:
-        TVertex numberOfVertexes_;
+        size_t numberOfVertexes_;
         std::vector< std::vector <TEdge>> vertexes_;
 };
 
-template <class TVertex, class TWeight>
-Graph<TVertex, TWeight>::Graph(const TVertex numberOfVertexes)
+template </*class TData, */class TWeight>
+Graph<TWeight>::Graph(const size_t numberOfVertexes)
 {
     numberOfVertexes_ = numberOfVertexes;
-    vertexes_.resize(static_cast<size_t>(numberOfVertexes));
+    vertexes_.resize(numberOfVertexes);
 }
 
-template <class TVertex, class TWeight>
-void Graph<TVertex, TWeight>::addEdge(const TVertex vStart, const TVertex vEnd, const TWeight weight)
+//добавление ребра
+//нумерация начинается с 1-цы, кратных рёбер нет
+template </*class TData, */class TWeight>
+bool Graph<TWeight>::addEdge(const size_t vStart, const size_t vEnd, const TWeight edgeWeight)
 {
-    vertexes_[static_cast<size_t>(vStart) - 1].push_back(std::pair<TVertex, TWeight>(vEnd - TVertex(1),  weight));
-    vertexes_[static_cast<size_t>(vEnd) - 1].push_back(std::pair<TVertex, TWeight>(vStart - TVertex(1),  weight));
+    if(vStart >=1 && vEnd >= 1)
+    {
+        vertexes_[vStart - 1].push_back(std::pair<size_t, TWeight>(vEnd - 1,  edgeWeight));
+        vertexes_[vEnd - 1].push_back(std::pair<size_t, TWeight>(vStart - 1,  edgeWeight));
+        return true;
+    }
+    else
+        return false;
 }
 
-template <class TVertex, class TWeight>
-void Graph<TVertex, TWeight>::print()
+template </*class TData, */class TWeight>
+void Graph<TWeight>::print() const
 {
-    for(size_t i = 0; i < static_cast<size_t>(numberOfVertexes_); ++i)
+    for(size_t i = 0; i < numberOfVertexes_; ++i)
     {
         std::cout << "i = " << i + 1 << ":";
         for(auto edge : vertexes_[i])
-            std::cout << " to = " << edge.first + TVertex(1) << ", weight = " << edge.second;
+            std::cout << " to = " << (edge.first + 1) << ", weight = " << edge.second;
         std::cout << " " << std::endl;
     }
 }
 
-template <class TVertex, class TWeight>
-TWeight primMST(Graph<TVertex, TWeight>& graphWeighted)
+template </*class TData, */class TWeight>
+TWeight primMST(Graph<TWeight>& graphWeighted)
 {
     // вес остового дерева
     TWeight result(0);
-    TVertex numberOfVertexes = graphWeighted.getNumberOfVertexes();
+    size_t numberOfVertexes = graphWeighted.getNumberOfVertexes();
 
     // минимальное расстояние от вершины до остовного дерева
-    std::vector<TWeight>  minDist(static_cast<size_t>(numberOfVertexes), std::numeric_limits<TWeight>::max());
+    std::vector<TWeight>  minDist(numberOfVertexes, std::numeric_limits<TWeight>::max());
     // предок вершины в остовном дереве
-    std::vector<TVertex>  parent(static_cast<size_t>(numberOfVertexes), std::numeric_limits<TVertex>::min());
+    std::vector<size_t>  parent(numberOfVertexes, std::numeric_limits<size_t>::min());
     // проверка, лежит ли вершина в очереди
-    std::vector<bool> isInQueue(static_cast<size_t>(numberOfVertexes), true);
+    std::vector<bool> isInQueue(numberOfVertexes, true);
 
     // начинаем с 0-ой вершины
     minDist[0] = TWeight(0);
@@ -91,15 +108,15 @@ TWeight primMST(Graph<TVertex, TWeight>& graphWeighted)
     // остовного дерева
     // в очереди хранятся пары (расстояние-номер вершины)
     //typedef std::pair<TVertex, TWeight> TEdge;
-    std::set<std::pair<TWeight, TVertex>> pq;
+    std::set<std::pair<TWeight, size_t>> pq;
 
     // заполняем очередь
-    for(TVertex i = 0; i < numberOfVertexes; ++i)
+    for(size_t i = 0; i < numberOfVertexes; ++i)
         pq.insert(std::make_pair(minDist[i], i));
     
     // выбираем 0-ую вершину
-    TVertex from = pq.begin()->second;
-    isInQueue[static_cast<size_t>(from)] = false;
+    size_t from = pq.begin()->second;
+    isInQueue[from] = false;
     pq.erase(pq.begin());
 
     while (!pq.empty())
@@ -107,40 +124,41 @@ TWeight primMST(Graph<TVertex, TWeight>& graphWeighted)
         // просматриваем вершины, смежные очередной вершине остового дерева 
         for(auto edge : graphWeighted.getEdgesOfVertex(from))
         {
-            TVertex to = edge.first;
+            size_t to = edge.first;
             TWeight distFromToI = edge.second;
             
             // если нашли такого сына to, что его расстояние до дерева
             // distFromToI меньше расстояния до дерева в minDist[to],
             // обновляем minDist[to], записываем предка parent[to] и
             // обновляем расстояние minDist[to] в очереди
-            if (isInQueue[static_cast<size_t>(to)] && distFromToI < minDist[static_cast<size_t>(to)])
+            if (isInQueue[to] && distFromToI < minDist[to])
             {
                 pq.erase(std::make_pair(minDist[to], to));
-                minDist[static_cast<size_t>(to)] = distFromToI;
-                parent[static_cast<size_t>(to)] = from;
+                minDist[to] = distFromToI;
+                parent[to] = from;
                 pq.insert(std::make_pair(minDist[to], to));
                 
             }
         }
         // выбираем очередную вершину о остовом дереве
         from = pq.begin()->second;
-        isInQueue[static_cast<size_t>(from)] = false;
+        isInQueue[from] = false;
         pq.erase(pq.begin());
         // обновляем вес остового дерева
-        result += minDist[static_cast<size_t>(from)];
+        result += minDist[from];
     }
     return result;
 }
 
 int main()
 {
-    int n, m;
+    size_t n;
+    int m;
 
     std::cin >> n >> m;
 
     int v1, v2, w;
-    Graph<int, int> graphWeighted(n);
+    Graph<int> graphWeighted(n);
     
     for(int i = 0; i < m; ++i)
     {
