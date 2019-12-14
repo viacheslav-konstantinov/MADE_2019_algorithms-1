@@ -122,7 +122,7 @@ TWeight primMST(Graph<TWeight>& graphWeighted)
     while (!pq.empty())
     {
         // просматриваем вершины, смежные очередной вершине остового дерева 
-        for(auto edge : graphWeighted.getEdgesOfVertex(from))
+        for(auto edge : graphWeighted.getEdgesOfVertex(from + 1))
         {
             size_t to = edge.first;
             TWeight distFromToI = edge.second;
